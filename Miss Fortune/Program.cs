@@ -147,7 +147,7 @@ namespace Miss_Fortune
             if (!unit.IsMe)
                 return;
             if (Player.IsChannelingImportantSpell()
-                || Player.HasBuff("MF BUFF"))
+                || Player.HasBuff("MissFortuneBulletTime"))
                 return;
             if (!target.IsEnemy)
                 return;

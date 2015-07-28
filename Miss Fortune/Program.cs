@@ -1,4 +1,4 @@
-﻿using System;
+﻿vusing System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -137,13 +137,7 @@ namespace Miss_Fortune
 
         private static void Orbwalking_AfterAttack(AttackableUnit unit, AttackableUnit target)
         {
-            throw new NotImplementedException();
-        }
-
-        private static void AfterAttack(AttackableUnit unit, AttackableUnit target)
-        {
-
-            if (!unit.IsMe)
+             if (!unit.IsMe)
                 return;
             if (Player.IsChannelingImportantSpell()
                 || Player.HasBuff("MissFortuneBulletTime"))
@@ -155,7 +149,6 @@ namespace Miss_Fortune
                 Q.Cast(t);
 
         }
-
 
         private static void Combo()
         {

@@ -1,4 +1,4 @@
-﻿vusing System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -103,6 +103,7 @@ namespace Miss_Fortune
             Config.AddToMainMenu();
             Game.OnUpdate += Game_OnGameUpdate;
             Drawing.OnDraw += Drawing_OnDraw;
+            Orbwalking.AfterAttack += Orbwalking_AfterAttack;
         }
         private static void Game_OnGameUpdate(EventArgs args)
         {
@@ -111,7 +112,7 @@ namespace Miss_Fortune
                 Orbwalker.SetAttack(false);
                 Orbwalker.SetMovement(false);
             }
-            Orbwalking.AfterAttack += Orbwalking_AfterAttack;
+
 
             switch (Orbwalker.ActiveMode)
             {
@@ -137,7 +138,7 @@ namespace Miss_Fortune
 
         private static void Orbwalking_AfterAttack(AttackableUnit unit, AttackableUnit target)
         {
-             if (!unit.IsMe)
+            if (!unit.IsMe)
                 return;
             if (Player.IsChannelingImportantSpell()
                 || Player.HasBuff("MissFortuneBulletTime"))
@@ -147,7 +148,6 @@ namespace Miss_Fortune
             var t = TargetSelector.GetTarget(E.Range, TargetSelector.DamageType.Magical);
             if (Q.IsReady())
                 Q.Cast(t);
-
         }
 
         private static void Combo()
@@ -188,7 +188,7 @@ namespace Miss_Fortune
                 if ((target.MaxHealth / target.Health) < 0.2 && target.IsValidTarget(R.Range - 100) && !Q.IsReady() && !W.IsReady() && !E.IsReady()) R.Cast(target.ServerPosition);
             }
         }
-       
+
         private static void Harass()
         {
             if (ObjectManager.Player.ManaPercent < Config.Item("harassMana").GetValue<Slider>().Value) return;

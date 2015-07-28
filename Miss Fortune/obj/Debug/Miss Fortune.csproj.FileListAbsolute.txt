@@ -10,3 +10,15 @@ C:\Users\Alex\Documents\Visual Studio 2013\Projects\Miss Fortune\WR-GoFuckYourse
 C:\Users\Alex\Documents\Visual Studio 2013\Projects\Miss Fortune\WR-GoFuckYourself MF\obj\Debug\Miss Fortune.csprojResolveAssemblyReference.cache
 C:\Users\Alex\Documents\Visual Studio 2013\Projects\Miss Fortune\WR-GoFuckYourself MF\obj\Debug\Miss Fortune.exe
 C:\Users\Alex\Documents\Visual Studio 2013\Projects\Miss Fortune\WR-GoFuckYourself MF\obj\Debug\Miss Fortune.pdb
+C:\Users\Alex\Desktop\Miss Fortune\obj\Debug\Miss Fortune.exe
+C:\Users\Alex\Desktop\Miss Fortune\obj\Debug\Miss Fortune.pdb
+C:\Users\Alex\Desktop\Miss Fortune\bin\Release\Miss Fortune.exe
+C:\Users\Alex\Desktop\Miss Fortune\bin\Release\Miss Fortune.pdb
+C:\Users\Alex\Desktop\Miss Fortune\bin\Release\LeagueSharp.Common.dll
+C:\Users\Alex\Desktop\Miss Fortune\bin\Release\LeagueSharp.dll
+C:\Users\Alex\Desktop\Miss Fortune\bin\Release\SharpDX.dll
+C:\Users\Alex\Desktop\Miss Fortune\bin\Release\SharpDX.Direct3D9.dll
+C:\Users\Alex\Desktop\Miss Fortune\bin\Release\clipper_library.dll
+C:\Users\Alex\Desktop\Miss Fortune\bin\Release\LeagueSharp.Sandbox.dll
+C:\Users\Alex\Desktop\Miss Fortune\bin\Release\LeagueSharp.xml
+C:\Users\Alex\Desktop\Miss Fortune\obj\Debug\Miss Fortune.csprojResolveAssemblyReference.cache

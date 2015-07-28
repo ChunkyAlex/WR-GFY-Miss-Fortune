@@ -104,7 +104,6 @@ namespace Miss_Fortune
             Game.OnUpdate += Game_OnGameUpdate;
             Drawing.OnDraw += Drawing_OnDraw;
         }
-
         private static void Game_OnGameUpdate(EventArgs args)
         {
             if (Player.HasBuff("MissFortuneBulletTime"))

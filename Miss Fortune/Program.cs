@@ -20,6 +20,7 @@ namespace Miss_Fortune
         private static readonly Obj_AI_Hero Player = ObjectManager.Player;
         private static SpellSlot Flash;
         public static Spell Q, W, E, R;
+        private static bool _rBlock;
         public static float RCastTime { get; set; }
 
         private static void Main(string[] args)
@@ -87,9 +88,12 @@ namespace Miss_Fortune
                 .AddItem(new MenuItem("aaRangeDraw", "AA Range").SetValue(new Circle(true, Color.White)));
 
             Config.AddToMainMenu();
+
             Game.OnUpdate += Game_OnGameUpdate;
             Drawing.OnDraw += Drawing_OnDraw;
             Orbwalking.AfterAttack += Orbwalking_AfterAttack;
+            Obj_AI_Base.OnIssueOrder += Obj_AI_Hero_OnIssueOrder;
+            Orbwalking.BeforeAttack += BeforeAttack;
             Obj_AI_Base.OnProcessSpellCast += OnSpell;
             Obj_AI_Base.OnPlayAnimation += OnAnimation;
         }
@@ -99,8 +103,12 @@ namespace Miss_Fortune
             if (!sender.IsMe) return;
             if (args.Animation == "Spell4")
             {
-                Orbwalker.SetAttack(false);
-                Orbwalker.SetMovement(false);
+                _rBlock = true;
+            }
+            else if (args.Animation == "Run" || args.Animation == "Idle1" || args.Animation == "Attack2" ||
+                     args.Animation == "Attack1")
+            {
+                _rBlock = false;
             }
         }
 
@@ -109,14 +117,13 @@ namespace Miss_Fortune
             if (!sender.IsMe) return;
             if (args.SData.Name == "MissFortuneBulletTime")
             {
-                Orbwalker.SetAttack(false);
-                Orbwalker.SetMovement(false);
+                _rBlock = true;
             }
         }
 
         private static void Game_OnGameUpdate(EventArgs args)
         {
-            if (Player.HasBuff("MissFortuneBulletTime"))
+            if (_rBlock = true)
             {
                 Orbwalker.SetAttack(false);
                 Orbwalker.SetMovement(false);
@@ -152,12 +159,28 @@ namespace Miss_Fortune
 
         private static void Orbwalking_AfterAttack(AttackableUnit unit, AttackableUnit target)
         {
-            if (!unit.IsMe || Player.IsChannelingImportantSpell() || Player.HasBuff("MissFortuneBulletTime") || Orbwalker.ActiveMode != Orbwalking.OrbwalkingMode.Combo)
+            if (!unit.IsMe || Player.IsChannelingImportantSpell() || _rBlock || Orbwalker.ActiveMode != Orbwalking.OrbwalkingMode.Combo)
                 return;
             if (Q.CanCast(target as Obj_AI_Hero))
             {
                 Q.Cast(target as Obj_AI_Hero);
                 Utility.DelayAction.Add(150, Orbwalking.ResetAutoAttackTimer);
+            }
+        }
+
+        private static void BeforeAttack(Orbwalking.BeforeAttackEventArgs args)
+        {
+            if (args.Unit.IsMe)
+            {
+                args.Process = !_rBlock;
+            }
+        }
+
+        private static void Obj_AI_Hero_OnIssueOrder(Obj_AI_Base sender, GameObjectIssueOrderEventArgs args)
+        {
+            if (sender.IsMe)
+            {
+                args.Process = !_rBlock;
             }
         }
 

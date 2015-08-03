@@ -33,14 +33,10 @@ namespace Miss_Fortune
 
             Q = new Spell(SpellSlot.Q, 650);
             Q.SetTargetted(0.29f, 1400f);
-
             W = new Spell(SpellSlot.W);
-
             E = new Spell(SpellSlot.E, 800);
             E.SetSkillshot(0.5f, 100f, float.MaxValue, false, SkillshotType.SkillshotCircle);
-
             R = new Spell(SpellSlot.R, 1200);
-
             SpellList.Add(Q);
             SpellList.Add(W);
             SpellList.Add(E);
@@ -55,6 +51,16 @@ namespace Miss_Fortune
             Config.AddSubMenu(new Menu("Orbwalker Settings", "Orbwalker Settings"));
             Orbwalker = new Orbwalking.Orbwalker(Config.SubMenu("Orbwalker Settings"));
 
+            //jungleclear
+            Config.AddSubMenu(new Menu("Jungleclear", "Jungleclear"));
+            Config.SubMenu("Jungleclear").AddItem(new MenuItem("qJungle", "Use Q").SetValue(true));
+            Config.SubMenu("Jungleclear").AddItem(new MenuItem("wJungle", "Use W").SetValue(true));
+            Config.SubMenu("Jungleclear").AddItem(new MenuItem("eJungle", "Use E").SetValue(true));
+            Config.SubMenu("Jungleclear")
+                .AddItem(
+                    new MenuItem("JungleFarmActive", "JungleFarm!").SetValue(new KeyBind("V".ToCharArray()[0],
+                        KeyBindType.Press)));
+            //combo
             Config.AddSubMenu(new Menu("Combo Settings", "Combo Settings"));
             Config.SubMenu("Combo Settings").AddItem(new MenuItem("qCombo", "Use Q").SetValue(true));
             Config.SubMenu("Combo Settings").AddItem(new MenuItem("wCombo", "Use W").SetValue(true));
@@ -62,7 +68,7 @@ namespace Miss_Fortune
             Config.SubMenu("Combo Settings").AddItem(new MenuItem("rCombo", "Use R").SetValue(true));
             Config.SubMenu("Combo Settings")
                 .AddItem(new MenuItem("rComboxEnemy", "R on x Enemy").SetValue(new Slider(3, 1, 5)));
-
+            //laneclear
             Config.AddSubMenu(new Menu("Laneclear Settings", "Laneclear Settings"));
             Config.SubMenu("Laneclear Settings").AddItem(new MenuItem("qLaneclear", "Use Q").SetValue(true));
             Config.SubMenu("Laneclear Settings").AddItem(new MenuItem("eLaneclear", "Use E").SetValue(true));
@@ -70,12 +76,14 @@ namespace Miss_Fortune
                 .AddItem(new MenuItem("siegeminionstoQ", "Use Q for Siege Minions").SetValue(true));
             Config.SubMenu("Laneclear Settings")
                 .AddItem(new MenuItem("clearMana", "LaneClear Mana Percent").SetValue(new Slider(30, 1)));
-
+            //harass
             Config.AddSubMenu(new Menu("Harass Settings", "Harass Settings"));
             Config.SubMenu("Harass Settings").AddItem(new MenuItem("qHarass", "Use Q").SetValue(true));
             Config.SubMenu("Harass Settings")
                 .AddItem(new MenuItem("harassMana", "Harass Mana Percent").SetValue(new Slider(30, 1)));
-
+            //misc
+            
+            //draw
             Config.AddSubMenu(new Menu("Draw Settings", "Draw Settings"));
             Config.SubMenu("Draw Settings")
                 .AddItem(new MenuItem("qDraw", "Q Range").SetValue(new Circle(true, Color.SpringGreen)));
@@ -86,32 +94,47 @@ namespace Miss_Fortune
             Config.SubMenu("Draw Settings")
                 .AddItem(new MenuItem("aaRangeDraw", "AA Range").SetValue(new Circle(true, Color.White)));
 
+
+            
+
             Config.AddToMainMenu();
             Game.OnUpdate += Game_OnGameUpdate;
             Drawing.OnDraw += Drawing_OnDraw;
             Orbwalking.AfterAttack += Orbwalking_AfterAttack;
-            Obj_AI_Base.OnProcessSpellCast += OnSpell;
-            Obj_AI_Base.OnPlayAnimation += OnAnimation;
+            Obj_AI_Base.OnProcessSpellCast += Obj_AI_Hero_OnProcessSpellCast;
+
         }
 
-        private static void OnAnimation(Obj_AI_Base sender, GameObjectPlayAnimationEventArgs args)
+        private static void Obj_AI_Hero_OnProcessSpellCast(Obj_AI_Base sender, GameObjectProcessSpellCastEventArgs args)
         {
-            if (!sender.IsMe) return;
-            if (args.Animation == "Spell4")
+             if (sender.IsMe && args.SData.Name == "MissFortuneBulletTime")
             {
-                Orbwalker.SetAttack(false);
-                Orbwalker.SetMovement(false);
+                RCastTime = Game.Time;
+                Program.debug(args.SData.Name);
+                Orbwalking.Attack = false;
+                Orbwalking.Move = false;
+                if (Config.Item("forceBlockMove").GetValue<bool>())
+                {
+                    Program.Orbwalker.SetAttack(true);
+                    Program.Orbwalker.SetMovement(true);
+                }
             }
         }
 
-        private static void OnSpell(Obj_AI_Base sender, GameObjectProcessSpellCastEventArgs args)
+        private static void Orbwalking_AfterAttack(AttackableUnit unit, AttackableUnit target)
         {
-            if (!sender.IsMe) return;
-            if (args.SData.Name == "MissFortuneBulletTime")
+            if (!unit.IsMe || Player.IsChannelingImportantSpell() || Player.HasBuff("MissFortuneBulletTime") || Orbwalker.ActiveMode != Orbwalking.OrbwalkingMode.Combo)
+                return;
+            if (Q.CanCast(target as Obj_AI_Hero))
             {
-                Orbwalker.SetAttack(false);
-                Orbwalker.SetMovement(false);
+                Q.Cast(target as Obj_AI_Hero);
+                Utility.DelayAction.Add(150, Orbwalking.ResetAutoAttackTimer);
             }
+        }
+
+        private static void debug(string p)
+        {
+            throw new NotImplementedException();
         }
 
         private static void Game_OnGameUpdate(EventArgs args)
@@ -150,16 +173,7 @@ namespace Miss_Fortune
             }
         }
 
-        private static void Orbwalking_AfterAttack(AttackableUnit unit, AttackableUnit target)
-        {
-            if (!unit.IsMe || Player.IsChannelingImportantSpell() || Player.HasBuff("MissFortuneBulletTime") || Orbwalker.ActiveMode != Orbwalking.OrbwalkingMode.Combo)
-                return;
-            if (Q.CanCast(target as Obj_AI_Hero))
-            {
-                Q.Cast(target as Obj_AI_Hero);
-                Utility.DelayAction.Add(150, Orbwalking.ResetAutoAttackTimer);
-            }
-        }
+
 
         private static void Combo()
         {
@@ -172,19 +186,51 @@ namespace Miss_Fortune
                 W.Cast();
             }
 
-            if (E.CanCast(target) && Config.Item("eCombo").GetValue<bool>() && !Orbwalker.InAutoAttackRange(target))
+            //Ardud Q logic
+            if (Q.IsReady())
+            
+            target = TargetSelector.GetTarget(Q.Range + 500, TargetSelector.DamageType.Physical);
+            var allMinion = MinionManager.GetMinions(target.Position, Q.Range, MinionTypes.All, MinionTeam.NotAlly);
+            if (target.IsValidTarget(Q.Range))
             {
-                E.Cast(target);
+                Q.Cast();
+                
+            }
+            Obj_AI_Base[] nearstMinion = { null };
+            foreach (var minion in
+                allMinion.Where(
+                    minion =>
+                    minion.Distance(ObjectManager.Player) <= target.Distance(ObjectManager.Player)
+                    && target.Distance(minion) < 450)
+                    .Where(
+                        minion =>
+                        nearstMinion[0] == null
+                        || minion.Distance(ObjectManager.Player) < nearstMinion[0].Distance(ObjectManager.Player)))
+            {
+                nearstMinion[0] = minion;
+            }
+            if (nearstMinion[0] != null && nearstMinion[0].IsValidTarget(Q.Range))
+            {
+                Q.CastOnUnit(nearstMinion[0], Q.Cast());
             }
 
-            if (R.CanCast(target) && Config.Item("rCombo").GetValue<bool>() && !Q.IsReady() && !W.IsReady() && !E.IsReady())
             {
-                var slidercount = Config.Item("rComboxEnemy").GetValue<Slider>().Value;
 
-                R.CastIfWillHit(target, slidercount);
 
-                if (R.IsKillable(target) || (target.MaxHealth / target.Health) < 0.2)
-                    R.Cast(target.Position);
+                if (E.CanCast(target) && Config.Item("eCombo").GetValue<bool>() && !Orbwalker.InAutoAttackRange(target))
+                {
+                    E.Cast(target);
+                }
+
+                if (R.CanCast(target) && Config.Item("rCombo").GetValue<bool>() && !Q.IsReady() && !W.IsReady()
+                    && !E.IsReady())
+                {
+                    var slidercount = Config.Item("rComboxEnemy").GetValue<Slider>().Value;
+
+                    R.CastIfWillHit(target, slidercount);
+
+                    if (R.IsKillable(target) || (target.MaxHealth / target.Health) < 0.2) R.Cast(target.Position);
+                }
             }
         }
 
@@ -221,6 +267,25 @@ namespace Miss_Fortune
             }
         }
 
+        private static void JungleFarm()
+        {
+            var mobs = MinionManager.GetMinions(ObjectManager.Player.ServerPosition, Q.Range,
+                MinionTypes.All,
+                MinionTeam.Neutral, MinionOrderTypes.MaxHealth);
+
+            if (mobs.Count > 0)
+            {
+                if (Config.Item("qJungle").GetValue<bool>() && Q.IsReady())
+                    Q.Cast();
+
+                if (Config.Item("wJungle").GetValue<bool>() && W.IsReady())
+                    E.CastOnUnit(mobs[0]);
+
+                if (Config.Item("eJungle").GetValue<bool>() && E.IsReady())
+                    E.CastOnUnit(mobs[0]);
+            }
+        }
+
         private static void Drawing_OnDraw(EventArgs args)
         {
             var menuItem1 = Config.Item("qDraw").GetValue<Circle>();
@@ -236,8 +301,10 @@ namespace Miss_Fortune
         public struct Spells
         {
             public string ChampionName;
-            public SpellSlot slot;
             public string SpellName;
         }
+
+        public static int UltTick { get; set; }
+        
     }
 }

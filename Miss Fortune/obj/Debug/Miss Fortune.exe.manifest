@@ -3,7 +3,7 @@
   <asmv1:assemblyIdentity name="Miss Fortune.exe" version="1.0.0.2" publicKeyToken="0000000000000000" language="neutral" processorArchitecture="x86" type="win32" />
   <application />
   <entryPoint>
-    <assemblyIdentity name="Miss Fortune" version="1.0.0.1" language="neutral" processorArchitecture="x86" />
+    <assemblyIdentity name="Miss Fortune" version="1.0.0.2" language="neutral" processorArchitecture="x86" />
     <commandLine file="Miss Fortune.exe" parameters="" />
   </entryPoint>
   <trustInfo>
@@ -91,13 +91,13 @@
   </dependency>
   <dependency>
     <dependentAssembly dependencyType="install" allowDelayedBinding="true" codebase="Miss Fortune.exe" size="15272">
-      <assemblyIdentity name="Miss Fortune" version="1.0.0.1" language="neutral" processorArchitecture="x86" />
+      <assemblyIdentity name="Miss Fortune" version="1.0.0.2" language="neutral" processorArchitecture="x86" />
       <hash>
         <dsig:Transforms>
           <dsig:Transform Algorithm="urn:schemas-microsoft-com:HashTransforms.Identity" />
         </dsig:Transforms>
         <dsig:DigestMethod Algorithm="http://www.w3.org/2000/09/xmldsig#sha256" />
-        <dsig:DigestValue>0bmBcMN7zjLrA6G9pUnkiwLK8hbf4LL4BJsl9S8/umA=</dsig:DigestValue>
+        <dsig:DigestValue>RwLuJR6W+QJaxuOEmo4zCBSmzDqBweV7ZenES3uYlk8=</dsig:DigestValue>
       </hash>
     </dependentAssembly>
   </dependency>

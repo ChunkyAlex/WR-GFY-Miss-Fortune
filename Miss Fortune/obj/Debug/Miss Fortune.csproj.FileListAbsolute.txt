@@ -15,3 +15,5 @@ C:\Users\Alex\Desktop\Miss Fortune\bin\Release\Miss Fortune.application
 C:\Users\Alex\Desktop\Miss Fortune\obj\Debug\Miss Fortune.TrustInfo.xml
 C:\Users\Alex\Desktop\Miss Fortune\obj\Debug\Miss Fortune.exe.manifest
 C:\Users\Alex\Desktop\Miss Fortune\obj\Debug\Miss Fortune.application
+C:\Users\Alex\Documents\GitHub\WR-GFY-Miss-Fortune\Miss Fortune\obj\Debug\Miss Fortune.exe
+C:\Users\Alex\Documents\GitHub\WR-GFY-Miss-Fortune\Miss Fortune\obj\Debug\Miss Fortune.pdb

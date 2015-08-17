@@ -21,6 +21,10 @@ namespace Miss_Fortune
         private static SpellSlot Flash;
         public static Spell Q, W, E, R;
         public static float RCastTime { get; set; }
+        public static bool IsCastingR
+        {
+           get { return ObjectManager.Player.HasBuff("missfortunebulletsound"); }
+        }
 
         private static void Main(string[] args)
         {
@@ -102,40 +106,37 @@ namespace Miss_Fortune
             Drawing.OnDraw += Drawing_OnDraw;
             Orbwalking.AfterAttack += Orbwalking_AfterAttack;
             Obj_AI_Base.OnProcessSpellCast += Obj_AI_Hero_OnProcessSpellCast;
-
+            Obj_AI_Base.OnIssueOrder += Obj_AI_Base_OnIssueOrder;
         }
 
         private static void Obj_AI_Hero_OnProcessSpellCast(Obj_AI_Base sender, GameObjectProcessSpellCastEventArgs args)
         {
              if (sender.IsMe && args.SData.Name == "MissFortuneBulletTime")
             {
-                RCastTime = Game.Time;
-                Program.debug(args.SData.Name);
-                Orbwalking.Attack = false;
-                Orbwalking.Move = false;
-                if (Config.Item("forceBlockMove").GetValue<bool>())
-                {
-                    Program.Orbwalker.SetAttack(true);
-                    Program.Orbwalker.SetMovement(true);
-                }
+                RCastTime = Utils.GameTimeTickCount;
             }
         }
 
         private static void Orbwalking_AfterAttack(AttackableUnit unit, AttackableUnit target)
         {
-            if (!unit.IsMe || Player.IsChannelingImportantSpell() || Player.HasBuff("MissFortuneBulletTime") || Orbwalker.ActiveMode != Orbwalking.OrbwalkingMode.Combo)
+            if (!unit.IsMe || Player.IsChannelingImportantSpell() || Player.HasBuff("missfortunebulletsound") || Orbwalker.ActiveMode != Orbwalking.OrbwalkingMode.Combo)
+            {
                 return;
+            }
+
             if (Q.CanCast(target as Obj_AI_Hero))
             {
                 Q.Cast(target as Obj_AI_Hero);
-                Utility.DelayAction.Add(150, Orbwalking.ResetAutoAttackTimer);
             }
         }
 
-        private static void debug(string p)
-        {
-            throw new NotImplementedException();
-        }
+        static void Obj_AI_Base_OnIssueOrder(Obj_AI_Base sender, GameObjectIssueOrderEventArgs args)
+         {
+           if ((ObjectManager.Player.IsChannelingImportantSpell() || IsCastingR) && IsSafe())
+           {
+               args.Process = false;
+            }
+         }
 
         private static void Game_OnGameUpdate(EventArgs args)
         {
@@ -149,7 +150,6 @@ namespace Miss_Fortune
                 Orbwalker.SetAttack(true);
                 Orbwalker.SetMovement(true);
             }
-
 
             switch (Orbwalker.ActiveMode)
             {
@@ -173,13 +173,21 @@ namespace Miss_Fortune
             }
         }
 
+        private static bool IsSafe()
+        {
+            return ObjectManager.Player.CountEnemiesInRange(ObjectManager.Player.AttackRange) <=
+                   ObjectManager.Player.CountAlliesInRange(ObjectManager.Player.AttackRange);
+        }
 
 
         private static void Combo()
         {
             var target = TargetSelector.GetTarget(E.Range, TargetSelector.DamageType.Magical);
 
-            if (target == null) return;
+            if (!target.IsValidTarget())
+            {
+                return;
+            }
 
             if (W.IsReady() && Config.Item("wCombo").GetValue<bool>() && target.IsValidTarget(500))
             {
@@ -190,32 +198,25 @@ namespace Miss_Fortune
             if (Q.IsReady())
             
             target = TargetSelector.GetTarget(Q.Range + 500, TargetSelector.DamageType.Physical);
-            var allMinion = MinionManager.GetMinions(target.Position, Q.Range, MinionTypes.All, MinionTeam.NotAlly);
-            if (target.IsValidTarget(Q.Range))
-            {
-                Q.Cast();
-                
-            }
-            Obj_AI_Base[] nearstMinion = { null };
-            foreach (var minion in
-                allMinion.Where(
+                var allMinion = MinionManager.GetMinions(target.Position, Q.Range, MinionTypes.All, MinionTeam.NotAlly);
+               if (target.IsValidTarget(Q.Range))
+                {
+                    Q.Cast();
+
+                }
+                Obj_AI_Base nearestMinion =
+                    allMinion.Where(
                     minion =>
-                    minion.Distance(ObjectManager.Player) <= target.Distance(ObjectManager.Player)
-                    && target.Distance(minion) < 450)
-                    .Where(
-                        minion =>
-                        nearstMinion[0] == null
-                        || minion.Distance(ObjectManager.Player) < nearstMinion[0].Distance(ObjectManager.Player)))
+                    minion.Distance(ObjectManager.Player) <= target.Distance(ObjectManager.Player) &&
+                            target.Distance(minion) < 450)
+                        .OrderBy(minion => minion.Distance(ObjectManager.Player))
+                        .FirstOrDefault();
             {
-                nearstMinion[0] = minion;
+                if (nearestMinion != null && nearestMinion.IsValidTarget(Q.Range))
+                {
+                    Q.CastOnUnit(nearestMinion);
+                }
             }
-            if (nearstMinion[0] != null && nearstMinion[0].IsValidTarget(Q.Range))
-            {
-                Q.CastOnUnit(nearstMinion[0], Q.Cast());
-            }
-
-            {
-
 
                 if (E.CanCast(target) && Config.Item("eCombo").GetValue<bool>() && !Orbwalker.InAutoAttackRange(target))
                 {
@@ -229,14 +230,23 @@ namespace Miss_Fortune
 
                     R.CastIfWillHit(target, slidercount);
 
-                    if (R.IsKillable(target) || (target.MaxHealth / target.Health) < 0.2) R.Cast(target.Position);
+                     if (R.IsKillable(target) || target.HealthPercent <= 20)
+                    {
+                        R.Cast(target.Position);
+                    }
                 }
-            }
         }
+    
+
 
         private static void Harass()
         {
-            if (ObjectManager.Player.ManaPercent < Config.Item("harassMana").GetValue<Slider>().Value) return;
+            if (ObjectManager.Player.ManaPercent < Config.Item("harassMana").GetValue<Slider>().Value)
+
+            {
+                return;
+                
+            }
 
             var target = TargetSelector.GetTarget(Q.Range, TargetSelector.DamageType.Physical);
 
@@ -248,14 +258,21 @@ namespace Miss_Fortune
 
         private static void LaneClear()
         {
-            if (ObjectManager.Player.ManaPercent < Config.Item("clearMana").GetValue<Slider>().Value) return;
+            if (ObjectManager.Player.ManaPercent < Config.Item("clearMana").GetValue<Slider>().Value)
+            {
+                return;
+                
+            }
             var allMinions = MinionManager.GetMinions(ObjectManager.Player.ServerPosition, Q.Range);
             var qminion = allMinions.FirstOrDefault(y => Q.IsKillable(y));
 
-            //siegeminionstoQ
-            if (Q.CanCast(qminion) && Config.Item("qLaneclear").GetValue<bool>())
+            if (qminion != null)
             {
-                Q.Cast(qminion);
+                if (Q.CanCast(qminion) && Config.Item("qLaneclear").GetValue<bool>())
+                {
+                    Q.Cast(qminion);
+                }
+
             }
             if (E.IsReady() && Config.Item("eLaneclear").GetValue<bool>())
             {

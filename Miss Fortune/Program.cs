@@ -23,7 +23,7 @@ namespace Miss_Fortune
         public static float RCastTime { get; set; }
         public static bool IsCastingR
         {
-           get { return ObjectManager.Player.HasBuff("missfortunebulletsound"); }
+            get { return ObjectManager.Player.HasBuff("missfortunebulletsound"); }
         }
 
         private static void Main(string[] args)
@@ -86,7 +86,7 @@ namespace Miss_Fortune
             Config.SubMenu("Harass Settings")
                 .AddItem(new MenuItem("harassMana", "Harass Mana Percent").SetValue(new Slider(30, 1)));
             //misc
-            
+
             //draw
             Config.AddSubMenu(new Menu("Draw Settings", "Draw Settings"));
             Config.SubMenu("Draw Settings")
@@ -99,7 +99,7 @@ namespace Miss_Fortune
                 .AddItem(new MenuItem("aaRangeDraw", "AA Range").SetValue(new Circle(true, Color.White)));
 
 
-            
+
 
             Config.AddToMainMenu();
             Game.OnUpdate += Game_OnGameUpdate;
@@ -111,7 +111,7 @@ namespace Miss_Fortune
 
         private static void Obj_AI_Hero_OnProcessSpellCast(Obj_AI_Base sender, GameObjectProcessSpellCastEventArgs args)
         {
-             if (sender.IsMe && args.SData.Name == "MissFortuneBulletTime")
+            if (sender.IsMe && args.SData.Name == "MissFortuneBulletTime")
             {
                 RCastTime = Utils.GameTimeTickCount;
             }
@@ -131,12 +131,12 @@ namespace Miss_Fortune
         }
 
         static void Obj_AI_Base_OnIssueOrder(Obj_AI_Base sender, GameObjectIssueOrderEventArgs args)
-         {
-           if ((ObjectManager.Player.IsChannelingImportantSpell() || IsCastingR) && IsSafe())
-           {
-               args.Process = false;
+        {
+            if ((ObjectManager.Player.IsChannelingImportantSpell() || IsCastingR) && IsSafe())
+            {
+                args.Process = false;
             }
-         }
+        }
 
         private static void Game_OnGameUpdate(EventArgs args)
         {
@@ -196,21 +196,21 @@ namespace Miss_Fortune
 
             //Ardud Q logic
             if (Q.IsReady())
-            
-            target = TargetSelector.GetTarget(Q.Range + 500, TargetSelector.DamageType.Physical);
-                var allMinion = MinionManager.GetMinions(target.Position, Q.Range, MinionTypes.All, MinionTeam.NotAlly);
-               if (target.IsValidTarget(Q.Range))
-                {
-                    Q.Cast();
 
-                }
-                Obj_AI_Base nearestMinion =
-                    allMinion.Where(
-                    minion =>
-                    minion.Distance(ObjectManager.Player) <= target.Distance(ObjectManager.Player) &&
-                            target.Distance(minion) < 450)
-                        .OrderBy(minion => minion.Distance(ObjectManager.Player))
-                        .FirstOrDefault();
+                target = TargetSelector.GetTarget(Q.Range + 500, TargetSelector.DamageType.Physical);
+            var allMinion = MinionManager.GetMinions(target.Position, Q.Range, MinionTypes.All, MinionTeam.NotAlly);
+            if (target.IsValidTarget(Q.Range))
+            {
+                Q.Cast(target.Position);
+
+            }
+            Obj_AI_Base nearestMinion =
+                allMinion.Where(
+                minion =>
+                minion.Distance(ObjectManager.Player) <= target.Distance(ObjectManager.Player) &&
+                        target.Distance(minion) < 450)
+                    .OrderBy(minion => minion.Distance(ObjectManager.Player))
+                    .FirstOrDefault();
             {
                 if (nearestMinion != null && nearestMinion.IsValidTarget(Q.Range))
                 {
@@ -218,34 +218,33 @@ namespace Miss_Fortune
                 }
             }
 
-                if (E.CanCast(target) && Config.Item("eCombo").GetValue<bool>() && !Orbwalker.InAutoAttackRange(target))
+            if (E.CanCast(target) && Config.Item("eCombo").GetValue<bool>() && !Orbwalker.InAutoAttackRange(target))
+            {
+                E.Cast(target);
+            }
+
+            if (R.CanCast(target) && Config.Item("rCombo").GetValue<bool>() && !Q.IsReady() && !W.IsReady()
+                && !E.IsReady())
+            {
+                var slidercount = Config.Item("rComboxEnemy").GetValue<Slider>().Value;
+
+                R.CastIfWillHit(target, slidercount);
+
+                if (R.IsKillable(target) || target.HealthPercent <= 20)
                 {
-                    E.Cast(target);
+                    R.Cast(target.Position);
                 }
-
-                if (R.CanCast(target) && Config.Item("rCombo").GetValue<bool>() && !Q.IsReady() && !W.IsReady()
-                    && !E.IsReady())
-                {
-                    var slidercount = Config.Item("rComboxEnemy").GetValue<Slider>().Value;
-
-                    R.CastIfWillHit(target, slidercount);
-
-                     if (R.IsKillable(target) || target.HealthPercent <= 20)
-                    {
-                        R.Cast(target.Position);
-                    }
-                }
+            }
         }
-    
+
 
 
         private static void Harass()
         {
             if (ObjectManager.Player.ManaPercent < Config.Item("harassMana").GetValue<Slider>().Value)
-
             {
                 return;
-                
+
             }
 
             var target = TargetSelector.GetTarget(Q.Range, TargetSelector.DamageType.Physical);
@@ -261,7 +260,7 @@ namespace Miss_Fortune
             if (ObjectManager.Player.ManaPercent < Config.Item("clearMana").GetValue<Slider>().Value)
             {
                 return;
-                
+
             }
             var allMinions = MinionManager.GetMinions(ObjectManager.Player.ServerPosition, Q.Range);
             var qminion = allMinions.FirstOrDefault(y => Q.IsKillable(y));
@@ -276,7 +275,7 @@ namespace Miss_Fortune
             }
             if (E.IsReady() && Config.Item("eLaneclear").GetValue<bool>())
             {
-                var efarm = Q.GetCircularFarmLocation(allMinions, 200);
+                var efarm = E.GetCircularFarmLocation(allMinions, 200);
                 if (efarm.MinionsHit >= 3)
                 {
                     E.Cast(efarm.Position);
@@ -293,13 +292,13 @@ namespace Miss_Fortune
             if (mobs.Count > 0)
             {
                 if (Config.Item("qJungle").GetValue<bool>() && Q.IsReady())
-                    Q.Cast();
+                    Q.CastOnUnit(mobs[0]);
 
                 if (Config.Item("wJungle").GetValue<bool>() && W.IsReady())
-                    E.CastOnUnit(mobs[0]);
+                    W.CastOnUnit(mobs[0]);
 
                 if (Config.Item("eJungle").GetValue<bool>() && E.IsReady())
-                    E.CastOnUnit(mobs[0]);
+                    E.Cast(mobs[0].Position);
             }
         }
 
@@ -322,6 +321,6 @@ namespace Miss_Fortune
         }
 
         public static int UltTick { get; set; }
-        
+
     }
 }

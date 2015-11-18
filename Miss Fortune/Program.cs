@@ -38,7 +38,7 @@ namespace Miss_Fortune
             Q = new Spell(SpellSlot.Q, 650);
             Q.SetTargetted(0.29f, 1400f);
             W = new Spell(SpellSlot.W);
-            E = new Spell(SpellSlot.E, 800);
+            E = new Spell(SpellSlot.E, 1000);
             E.SetSkillshot(0.5f, 100f, float.MaxValue, false, SkillshotType.SkillshotCircle);
             R = new Spell(SpellSlot.R, 1200);
             SpellList.Add(Q);
